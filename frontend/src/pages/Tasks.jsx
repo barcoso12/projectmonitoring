@@ -32,12 +32,21 @@ const Tasks = () => {
   });
   const [users, setUsers] = useState([]);
   const [activeMenuId, setActiveMenuId] = useState(null);
+  const [showMyTasks, setShowMyTasks] = useState(false);
   const menuRef = useRef(null);
   const { user } = useAuth();
 
   useEffect(() => {
     fetchInitialData();
   }, []);
+
+  useEffect(() => {
+    if (showMyTasks) {
+      fetchMyTasks();
+    } else if (projects.length > 0) {
+      handleProjectChange(projects[0].id);
+    }
+  }, [showMyTasks]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -70,7 +79,20 @@ const Tasks = () => {
     }
   };
 
+  const fetchMyTasks = async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.get('/tasks/my-tasks');
+      setTasks(data);
+    } catch (error) {
+      console.error('Error fetching my tasks:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleProjectChange = async (projectId) => {
+    if (!projectId) return;
     setLoading(true);
     try {
       const { data } = await api.get(`/tasks/project/${projectId}`);
@@ -166,16 +188,37 @@ const Tasks = () => {
         )}
       </div>
 
-      <div className="flex items-center space-x-4 bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
-        <Filter className="text-gray-400" size={20} />
-        <select
-          onChange={(e) => handleProjectChange(e.target.value)}
-          className="bg-transparent border-none text-sm font-medium focus:ring-0 text-gray-900 dark:text-gray-100 [&>option]:bg-white [&>option]:text-gray-900 dark:[&>option]:bg-gray-900 dark:[&>option]:text-gray-100"
-        >
-          {projects.map(p => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
+        <div className="flex items-center space-x-4">
+          <Filter className="text-gray-400" size={20} />
+          <select
+            onChange={(e) => {
+              setShowMyTasks(false);
+              handleProjectChange(e.target.value);
+            }}
+            disabled={showMyTasks}
+            className="bg-transparent border-none text-sm font-medium focus:ring-0 text-gray-900 dark:text-gray-100 [&>option]:bg-white [&>option]:text-gray-900 dark:[&>option]:bg-gray-900 dark:[&>option]:text-gray-100 disabled:opacity-50"
+          >
+            {projects.map(p => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
+          <button
+            onClick={() => setShowMyTasks(false)}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${!showMyTasks ? 'bg-white dark:bg-gray-700 shadow-sm text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'}`}
+          >
+            By Project
+          </button>
+          <button
+            onClick={() => setShowMyTasks(true)}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${showMyTasks ? 'bg-white dark:bg-gray-700 shadow-sm text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'}`}
+          >
+            Assigned to Me
+          </button>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">

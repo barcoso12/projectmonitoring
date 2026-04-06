@@ -22,7 +22,14 @@ const Login = () => {
       }
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong');
+      console.error('Login Error:', err);
+      if (err.response) {
+        setError(err.response.data.message || 'Server error');
+      } else if (err.request) {
+        setError('Cannot connect to server. Please check if backend is running.');
+      } else {
+        setError('An unexpected error occurred.');
+      }
     }
   };
 

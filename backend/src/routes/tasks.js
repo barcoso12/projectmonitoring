@@ -7,9 +7,43 @@ const { authenticate, authorize } = require('../middleware/auth');
 router.get('/project/:projectId', authenticate, async (req, res) => {
   try {
     const { projectId } = req.params;
+    const { role, id } = req.user;
+
+    // Security Check: Ensure user has access to this project
+    if (role !== 'ADMIN') {
+      const project = await prisma.project.findFirst({
+        where: {
+          id: projectId,
+          OR: [
+            { managerId: id },
+            { members: { some: { id } } },
+            { tasks: { some: { assigneeId: id } } }
+          ]
+        }
+      });
+
+      if (!project) {
+        return res.status(403).json({ message: 'Access denied to this project' });
+      }
+    }
+
     const tasks = await prisma.task.findMany({
       where: { projectId },
       include: { assignee: true, project: true }
+    });
+    res.json(tasks);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get all tasks assigned to the current user
+router.get('/my-tasks', authenticate, async (req, res) => {
+  try {
+    const tasks = await prisma.task.findMany({
+      where: { assigneeId: req.user.id },
+      include: { project: true, assignee: true },
+      orderBy: { deadline: 'asc' }
     });
     res.json(tasks);
   } catch (error) {

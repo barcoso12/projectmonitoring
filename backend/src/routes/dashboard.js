@@ -11,10 +11,21 @@ router.get('/metrics', authenticate, async (req, res) => {
 
     if (role === 'ADMIN') {
       projects = await prisma.project.findMany();
-    } else if (role === 'MANAGER') {
-      projects = await prisma.project.findMany({ where: { managerId: id } });
     } else {
-      projects = await prisma.project.findMany({ where: { members: { some: { id } } } });
+      // For both MANAGER and TEAM_MEMBER
+      // They should see projects where they are:
+      // 1. The project manager
+      // 2. A project member
+      // 3. Assigned to at least one task in the project
+      projects = await prisma.project.findMany({
+        where: {
+          OR: [
+            { managerId: id },
+            { members: { some: { id } } },
+            { tasks: { some: { assigneeId: id } } }
+          ]
+        }
+      });
     }
 
     const metrics = {

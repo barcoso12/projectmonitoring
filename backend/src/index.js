@@ -20,6 +20,7 @@ const taskRoutes = require('./routes/tasks');
 const userRoutes = require('./routes/users');
 const dashboardRoutes = require('./routes/dashboard');
 const notificationRoutes = require('./routes/notifications');
+const searchRoutes = require('./routes/search');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
@@ -27,6 +28,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/search', searchRoutes);
 
 app.get('/', (req, res) => {
   res.send('Project Monitoring API is running...');
