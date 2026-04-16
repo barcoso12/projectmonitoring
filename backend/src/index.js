@@ -21,6 +21,7 @@ const userRoutes = require('./routes/users');
 const dashboardRoutes = require('./routes/dashboard');
 const notificationRoutes = require('./routes/notifications');
 const searchRoutes = require('./routes/search');
+const errorHandler = require('./middleware/errorHandler');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
@@ -33,6 +34,9 @@ app.use('/api/search', searchRoutes);
 app.get('/', (req, res) => {
   res.send('Project Monitoring API is running...');
 });
+
+// Centralized error handling middleware
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
